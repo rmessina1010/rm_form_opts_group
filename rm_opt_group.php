@@ -161,19 +161,28 @@
    		 	
  		 	$new_group =$this->the_group;
 	 		foreach ($actions as $action=>$targets){
-		 		$act=$acts[$action];
-		 		foreach ($targets as $target){
+ 				$do_lim =  ($action && (isset($args[$action.'lim']) && @($args[$action.'lim']+0) > 0))  ?
+ 						    $args[$action.'lim']+0 : 0 ; //setlim
+ 				$act=$acts[$action];
+ 		 		foreach ($targets as $target){
 				 	$replace_this= $search_root_l.$target.$search_root_r;
-				 	if(!$act){
+				 	if(!$act){//does omit!!!!!!!!
 				 		// for loop
 				 		$replace_this= $this->generate(tag);
 				 		$new_group = str_replace($replace_this, '', $new_group);
 				 		//add omit foo
 				 		//
 			 		}
-			 		else{
+			 		else{// performs disables and selects
+				 		$use_lim =-1;
+						if ($do_lim > 0 ){
+							$sub = substr_count ($new_group, $replace_this);  // get a count of the number of intances of the str to be replaced
+  							$use_lim = $sub > $do_lim ? $do_lim :  $sub; // if the count is more than the remaining limit...
+							$do_lim =  $do_lim - $sub;  
+ 						}
 				 		$replace_with = $byVal  ?  $replace_this.$act : $act.$replace_this;
-				 		$new_group = str_replace($replace_this, $replace_with, $new_group);
+				 		$new_group = str_replace($replace_this, $replace_with, $new_group, $use_lim);
+						if ($do_lim < 1 ){    break;}	
 				 		//add replace ct limit
 			 		}
 			 	}	 		 
@@ -228,9 +237,15 @@ $opts[]=array("a"=>"third","b"=>"waste","c"=>"test","d"=>"engage","e"=>"success"
 $opts[]=array("a"=>"fourth","b"=>"end","c"=>"test","d"=>"deploy","e"=>"exit");
 $opts[]=array("a"=>"fifth","b"=>"new end","c"=>"test","d"=>"test","e"=>"win");
 $opts[]=array("a"=>"sixth","b"=>"newer end","c"=>"test","d"=>"test2","e"=>"winner");
+$opts[]=array("a"=>"seven","b"=>"end end","c"=>"test","d"=>"test7","e"=>"health");
+$opts[]=array("a"=>"eight","b"=>"end under  end","c"=>"test","d"=>"test7","e"=>"health");
+$opts[]=array("a"=>"nine","b"=>"end over end","c"=>"test","d"=>"test7","e"=>"health");
+$opts[]=array("a"=>"ten","b"=>"ten end","c"=>"test","d"=>"test7","e"=>"health");
+$opts[]=array("a"=>"eleven","b"=>"strange end","c"=>"test","d"=>"test11","e"=>"better");
+$opts[]=array("a"=>"twelve","b"=>"sure end","c"=>"test","d"=>"quiz","e"=>"best");
 
 $a= new rm_fg_select($opts,'{{a}}-{{c}}-{{##}}','text string #{{##}}', array('ski'=>array(1)));
 
-echo '<select>'.$a->output(false, array('sel'=>array('text string #3'), 'dis'=>array('text string #4','am option 9','am option 11'))).'</select>';
+echo '<select>'.$a->output(false, array('sel'=>array('text string #3','text string #5','text string #10'), 'dis'=>array('text string #4','text string #8','text string #9','text string #6'), 'dislim'=>2)).'</select>';
 
 
