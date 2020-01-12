@@ -10,8 +10,7 @@
 	
 	protected $value_str	 =  '';	
 	protected $value_qt	 	 =  '"';	
-	protected $value_eq	 	 =  ' = ';
-		
+ 		
   	protected $tag 	 		 =  false ;	
 	protected $tag_type_attr =  '' ;	
 	protected $tag_name_attr =  '' ;	
@@ -74,21 +73,25 @@
 	  		$this->build_element();
 	  		//set skip options
 	  		if (isset($def['skf']) &&  is_string($def['skf'])){ $this->skip_foo = $def['skf']; }
-	  		if (isset($def['ski'])) { $this->skip_index =  is_array($def['ski']) ? $def['ski'] : array($def['ski']); }
+	  		if (isset($def['ski'])) { 
+		  		$this->skip_index = is_array($def['ski']) ? $def['ski'] : array($def['ski']); 
+		  		$this->skip_index = array_flip($this->skip_index);
+ 		  	}
 	  		if (isset($def['skv']) &&  is_array($def['skv']) ) { $this->skip_val =   $def['skv'] ; }
   		}
-   		$this->genarate_group($data);
-   		echo $this->tag_row;
+  		$this->gather_rep_keys();
+   		$this->generate_group($data);
+
 	}
 	
 	function value_str($eq = " = ", $qt='"'){
 		if (!is_string($str)){return;}
 		$this->value_qt = $qt ? '"'  : "'";
 		$this->value_eq = $eq;
- 		$this->value_str=' value'.$this->value_eq.$this->qt;
+ 		$this->value_str=' value'.$this->value_eq.$this->value_tag.$this->qt;
 	}
 	
-	protected function genarate_group($data){//
+	protected function generate_group($data){//
  		if (!$this->tag) { return;}  
 		$this->data =(is_array($data) || is_string($data)) ? $data : false;
 		if (is_string($this->data)) { $this->the_group = $this->data; return;}
@@ -104,7 +107,7 @@
 	}
 
 	function skip_build($row,$index){
- 		if (isset($this->skip_index[$key])){return true;}
+ 		if (isset($this->skip_index[$index])){return true;}
  		foreach ($this->skip_val as $col=>$skip_vals){
 	 		if (isset($skip_vals[$row[$col]])) {return true;}
  		}
@@ -115,24 +118,25 @@
 	}
 
  	function gather_rep_keys(){
-		$str = $tis->value_tag;
-		if ($this->has_wrap ){ $str=$this->bef.$this->aft; }
+		$str = $this->value_tag;
+		if ($this->has_wrap ){ $str.=$this->bef.$this->aft; }
 		$str .= $this->tag_attrs;
-		preg_match_all('{{\m+}}',$str ,$m);
-		$this->rep_keys =isset($m[0]) ? $m[0] : array();
+		preg_match_all('#{{(\w+)}}#',$str ,$m);
+		$this->rep_keys =isset($m[1]) ? $m[1] : array();
 	}
  	
 	function build_element(){
-		$this->tag_row='<'.$this->tag.' '.$this->tag_attrs.' '.$this->value_str.'" >'.$this->tag_text;
+		$this->tag_row='<'.$this->tag.' '.$this->tag_attrs.$this->value_tag.' >'.$this->tag_text;
  		if( $this->close_tag){$this->tag_row.='</'.$this->tag.'>';}
 		if ($this->has_wrap) {$this->tag_row= $this->bef.$this->tag_row.$this->aft;}
   		$this->tag_row.="\n";
+  		 echo $this->tag_row;
 		
 	}
 	function key_replace($data,$key){
 		$str= str_replace('{{##}}', $key, $this->tag_row);
 		foreach ($this->rep_keys as $col){
-			$str= str_replace('{{'.$col.'}}', $data[$col], $this->tag_row); 
+			$str= str_replace('{{'.$col.'}}', $data[$col], $str); 
 		}
 		return $str;
 	}
@@ -164,11 +168,13 @@
 				 		// for loop
 				 		$replace_this= $this->generate(tag);
 				 		$new_group = str_replace($replace_this, '', $new_group);
+				 		//add omit foo
 				 		//
 			 		}
 			 		else{
 				 		$replace_with = $byVal  ?  $replace_this.$act : $act.$replace_this;
 				 		$new_group = str_replace($replace_this, $replace_with, $new_group);
+				 		//add replace ct limit
 			 		}
 			 	}	 		 
   		 	}
@@ -190,7 +196,8 @@
 	
 	protected $selected 	= ' SELECTED ';	
 	protected $tag 	 		= 'option';	
-	protected $onlyByVal	=  false;
+	protected $onlyByVal	= false;
+	protected $has_text		= true;
 }
 
 
@@ -219,8 +226,11 @@ $opts[]=array("a"=>"first","b"=>"start","c"=>"test","d"=>"run","e"=>"luck");
 $opts[]=array("a"=>"second","b"=>"continue","c"=>"test","d"=>"operate","e"=>"love");
 $opts[]=array("a"=>"third","b"=>"waste","c"=>"test","d"=>"engage","e"=>"success");
 $opts[]=array("a"=>"fourth","b"=>"end","c"=>"test","d"=>"deploy","e"=>"exit");
- $a= new rm_fg_select($opts,'{{a}}-{{c}}-{{##}}');
+$opts[]=array("a"=>"fifth","b"=>"new end","c"=>"test","d"=>"test","e"=>"win");
+$opts[]=array("a"=>"sixth","b"=>"newer end","c"=>"test","d"=>"test2","e"=>"winner");
 
-echo '<select>'.$a->output(false, array('sel'=>array('am option 5'), 'dis'=>array('am option 4','am option 9','am option 11'))).'</select>';
+$a= new rm_fg_select($opts,'{{a}}-{{c}}-{{##}}','text string #{{##}}', array('ski'=>array(1)));
+
+echo '<select>'.$a->output(false, array('sel'=>array('text string #3'), 'dis'=>array('text string #4','am option 9','am option 11'))).'</select>';
 
 
