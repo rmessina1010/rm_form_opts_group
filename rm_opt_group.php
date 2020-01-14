@@ -10,6 +10,7 @@
 	
 	protected $value_str	 =  '';	
 	protected $value_qt	 	 =  '"';	
+	protected $value_eq	 	 =  ' = ';	
  		
   	protected $tag 	 		 =  false ;	
 	protected $tag_type_attr =  '' ;	
@@ -85,11 +86,10 @@
 	}
 	
 	function value_str($eq = " = ", $qt='"'){
-		if (!is_string($str)){return;}
-		$this->value_qt = $qt ? '"'  : "'";
+ 		$this->value_qt = $qt ? '"'  : "'";
 		$this->value_eq = $eq;
- 		$this->value_str=' value'.$this->value_eq.$this->value_tag.$this->qt;
-	}
+ 		$this->value_str = ' value'.$this->value_eq.$this->value_qt.$this->value_tag.$this->value_qt;
+   	}
 	
 	protected function generate_group($data){//
  		if (!$this->tag) { return;}  
@@ -126,7 +126,7 @@
 	}
  	
 	function build_element(){
-		$this->tag_row='<'.$this->tag.' '.$this->tag_attrs.$this->value_tag.' >'.$this->tag_text;
+		$this->tag_row='<'.$this->tag.' '.$this->tag_attrs.$this->value_str.' >'.$this->tag_text;
  		if( $this->close_tag){$this->tag_row.='</'.$this->tag.'>';}
 		if ($this->has_wrap) {$this->tag_row= $this->bef.$this->tag_row.$this->aft;}
   		$this->tag_row.="\n";
@@ -162,7 +162,7 @@
  		 	$new_group =$this->the_group;
 	 		foreach ($actions as $action=>$targets){
  				$do_lim =  ($action && (isset($args[$action.'lim']) && @($args[$action.'lim']+0) > 0))  ?
- 						    $args[$action.'lim']+0 : 0 ; //setlim
+ 						    $args[$action.'lim']+0 : false ; //setlim
  				$act=$acts[$action];
  		 		foreach ($targets as $target){
 				 	$replace_this= $search_root_l.$target.$search_root_r;
@@ -174,16 +174,15 @@
 				 		//
 			 		}
 			 		else{// performs disables and selects
-				 		$use_lim =-1;
+				 		$use_lim = -1;
 						if ($do_lim > 0 ){
 							$sub = substr_count ($new_group, $replace_this);  // get a count of the number of intances of the str to be replaced
-  							$use_lim = $sub > $do_lim ? $do_lim :  $sub; // if the count is more than the remaining limit...
+  							$use_lim = ($sub > $do_lim) ? $do_lim :  $sub; // if the count is more than the remaining limit...
 							$do_lim =  $do_lim - $sub;  
  						}
 				 		$replace_with = $byVal  ?  $replace_this.$act : $act.$replace_this;
-				 		$new_group = str_replace($replace_this, $replace_with, $new_group, $use_lim);
-						if ($do_lim < 1 ){    break;}	
-				 		//add replace ct limit
+    				 		$new_group = str_replace($replace_this, $replace_with, $new_group ,$use_lim);
+ 						if ($do_lim !== false &&  $do_lim  <= 0 ){    break;}// replac ct limit	
 			 		}
 			 	}	 		 
   		 	}
@@ -246,6 +245,4 @@ $opts[]=array("a"=>"twelve","b"=>"sure end","c"=>"test","d"=>"quiz","e"=>"best")
 
 $a= new rm_fg_select($opts,'{{a}}-{{c}}-{{##}}','text string #{{##}}', array('ski'=>array(1)));
 
-echo '<select>'.$a->output(false, array('sel'=>array('text string #3','text string #5','text string #10'), 'dis'=>array('text string #4','text string #8','text string #9','text string #6'), 'dislim'=>2)).'</select>';
-
-
+echo '<select>'.$a->output(false, array('sel'=>array('text string #3','text string #5','text string #10'), 'dis'=>array('text string #4','text string #8','text string #9','text string #6'), 'dislim'=>2   )).'</select>';
