@@ -1,7 +1,7 @@
 <?
 /**
  * Author: Ray Messina
- * Copyright: 2020 Ray Messina Design; 
+ * Copyright: 2020 Ray Messina Design;
  * GNU General Public License
 **/
 	
@@ -147,15 +147,14 @@
   	function output($byVal=true , array $args=array()){
 	 		
 	 		$byVal = $this->onlyByVal ? true : $byVal;
-	 		$actions =array('omit'=>array(), 'sel'=>array(),'dis'=>array());
-	 		$acts 	=array('omit'=>false,'sel'=>$this->selected,'dis'=>' DISABLED ');
-	 		$setups =array( 'sel', 'dis', 'del');
-	 		foreach ($setups as $setup){
+	 		$actions =array('omit'=>array(),  'sel'=>array(),'dis'=>array());
+	 		$acts 	=array('omitt'=>false, 'sel'=>$this->selected,'dis'=>' DISABLED ');
+	 		foreach ($actions as $setup=>$junk){
 		 		 if (isset($args[$setup])){ 
 			 		 $actions[$setup] = is_array($args[$setup]) ? $args[$setup] : array($args[$setup]); 
 			 	}
  		 	}
-	 		
+	 		$fooBypas = (isset($args['omitf']) && is_string($args['omitf']) && function_exists($args['omitf'])) ? $args['omitf'] : false;
  		 	$search_root_l 	= $byVal ? $this->value_str : '>';
  		 	$search_root_r 	= $byVal ? $this->value_qt : '</'.$this->tag.'>' ;
    		 	
@@ -165,15 +164,24 @@
  						    $args[$action.'lim']+0 : false ; //setlim
  				$act=$acts[$action];
  		 		foreach ($targets as $target){
-				 	$replace_this= $search_root_l.$target.$search_root_r;
-				 	if(!$act){//does omit!!!!!!!!
-				 		// for loop
-				 		$replace_this= $this->generate(tag);
-				 		$new_group = str_replace($replace_this, '', $new_group);
-				 		//add omit foo
-				 		//
+				 	$replace_this= $search_root_l.$target.$search_root_r;  ///????
+				 	if(!$act){//performs omit!!!!!!!!
+				 	// select regex shell
+				 		// fooBypass / else:
+				 		if ($fooBypas){
+						 		$replace_this = $fooBypas($target,$byVal,$this->tag, $this->value_str,$this->tag_text, $rgxShell,$replace_this);
+						 		$replace_this = is_string($replace_this) ? $replace_this : '';  // sanitizes bypass foo results
+						 		$new_group = str_replace($replace_this, '', $new_group);		//do text replace
+					 	}else{
+						 		// if value is array then  fill in {{vars}}
+						 		// escape string and add to regex
+						 		/* do text replace  
+						 		//$replace_this= $this->generate(tag);
+						 		//$new_group = str_replace($replace_this, '', $new_group);
+						 		*/
+					    }
 			 		}
-			 		else{// performs disables and selects
+ 			 		else{// performs disables and selects
 				 		$use_lim = -1;
 						if ($do_lim > 0 ){
 							$sub = substr_count ($new_group, $replace_this);  // get a count of the number of intances of the str to be replaced
