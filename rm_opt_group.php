@@ -5,7 +5,7 @@
  * GNU General Public License
 **/
 	
-	class rm_tag_group{
+class rm_tag_group{
 	protected $selected 	 = 	'';
 	
 	protected $value_str	 =  '';	
@@ -82,7 +82,6 @@
   		}
   		$this->gather_rep_keys();
    		$this->generate_group($data);
-
 	}
 	
 	function value_str($eq = " = ", $qt='"'){
@@ -102,7 +101,6 @@
 				$this->the_group .= $this->key_replace($row,$key);
 			}
  		}
- 		
 		return;
 	}
 
@@ -130,9 +128,8 @@
  		if( $this->close_tag){$this->tag_row.='</'.$this->tag.'>';}
 		if ($this->has_wrap) {$this->tag_row= $this->bef.$this->tag_row.$this->aft;}
   		$this->tag_row.="\n";
-  		 echo $this->tag_row;
-		
 	}
+	
 	function key_replace($data,$key){
 		$str= str_replace('{{##}}', $key, $this->tag_row);
 		foreach ($this->rep_keys as $col){
@@ -140,9 +137,6 @@
 		}
 		return $str;
 	}
-
-
-
 
   	function output($byVal=true , array $args=array()){
 	 		
@@ -163,23 +157,25 @@
  				$do_lim =  ($action && (isset($args[$action.'lim']) && @($args[$action.'lim']+0) > 0))  ?
  						    $args[$action.'lim']+0 : false ; //setlim
  				$act=$acts[$action];
- 		 		foreach ($targets as $target){
-				 	$replace_this= $search_root_l.$target.$search_root_r;  ///????
-				 	if(!$act){//performs omit!!!!!!!!
-				 	// select regex shell
-				 		// fooBypass / else:
-				 		if ($fooBypas){
-						 		$replace_this = $fooBypas($target,$byVal,$this->tag, $this->value_str,$this->tag_text, $rgxShell,$replace_this);
-						 		$replace_this = is_string($replace_this) ? $replace_this : '';  // sanitizes bypass foo results
-						 		$new_group = str_replace($replace_this, '', $new_group);		//do text replace
-					 	}else{
-						 		// if value is array then  fill in {{vars}}
-						 		// escape string and add to regex
-						 		/* do text replace  
-						 		//$replace_this= $this->generate(tag);
-						 		//$new_group = str_replace($replace_this, '', $new_group);
-						 		*/
-					    }
+ 		 		foreach ($targets as $key=>$target){
+					$replace_this= $search_root_l.$target.$search_root_r;  ///????
+					if(!$act){//performs omit!!!!!!!!
+						// fooBypass / else:
+						if ($fooBypas){
+							$replace_this = $fooBypas($target,$byVal,$this->tag, $this->value_str,$this->tag_text, $rgxShell,$replace_this);
+							$replace_this = is_string($replace_this) ? $replace_this : '';  // sanitizes bypass foo results
+						}else{
+						 	// if target is array then  fill in {{vars}}
+						 	if (is_array($target)){  $replace_this = $this->key_replace($target, $key); }
+						 	else{
+						 		$target = preg_quote($target); 					// escape string and add to regex
+						 		/////!!!!!
+						 		$rgx  	=  $byVal ? '/^.*<'.$this->tag.' .* value'.$this->value_eq.$this->value_qt.$target.$this->value_qt.'.*>.*$/m'  : '/^.*<.*>'.$target.'<.*>.*$/m' ; 					// select regex shell    
+						 		$new_group = preg_replace($rgx, '', $new_group);// do pregmatch text replace 
+						 		continue; 
+						 	}
+ 					    }
+ 					    $new_group = str_replace($replace_this, '', $new_group); 		//do text replace
 			 		}
  			 		else{// performs disables and selects
 				 		$use_lim = -1;
@@ -253,4 +249,4 @@ $opts[]=array("a"=>"twelve","b"=>"sure end","c"=>"test","d"=>"quiz","e"=>"best")
 
 $a= new rm_fg_select($opts,'{{a}}-{{c}}-{{##}}','text string #{{##}}', array('ski'=>array(1)));
 
-echo '<select>'.$a->output(false, array('sel'=>array('text string #3','text string #5','text string #10'), 'dis'=>array('text string #4','text string #8','text string #9','text string #6'), 'dislim'=>2   )).'</select>';
+echo '<select>'.$a->output(false, array('sel'=>array('text string #3','text string #5','text string #10'), 'dis'=>array('text string #4','text string #8','text string #9','text string #6'), 'dislim'=>2 , 'omit'=>array('ten-test-9','first-test-0')  )).'</select>';
