@@ -11,6 +11,7 @@ class rm_tag_group{
 	protected $value_str	 =  '';	
 	protected $value_qt	 	 =  '"';	
 	protected $value_eq	 	 =  ' = ';	
+	protected $value_frag	 =  '';	
  		
   	protected $tag 	 		 =  false ;	
 	protected $tag_type_attr =  '' ;	
@@ -25,7 +26,6 @@ class rm_tag_group{
 	
 	protected $has_wrap 	 =  false ;	
 	protected $has_text 	 =  false ;	
-	protected $has_attrs 	 =  false ;	
 
 	protected $the_group 	 =  false;
 	protected $data 	 	 =  false;
@@ -36,11 +36,11 @@ class rm_tag_group{
 	protected $skip_index	 =  array();
 	protected $skip_val 	 =  array();
 	protected $attr_list 	 =  array();
-	
+	protected $global_attrs	 = array( 'dir','lang','style','id','class','tabindex','accesskey','title', 'hidden', 'contenteditable', 'translate');
 		
 	function __construct($data, $val_str='', $text_str='', array $args =array()){
-		$def = array('eq'=>$this->value_eq	 , 'qt'=>$this->value_qt, 'row'=>false, 'bef'=>'',  'aft'=>'', 'att'=>array());
-		
+		$def = array('eq'=>$this->value_eq	 , 'qt'=>$this->value_qt, 'row'=>false, 'bef'=>'',  'aft'=>'', 'att'=>array(), 'datt'=>array());
+
 		$def = array_merge($def, $args);
 		$this->value_tag = is_string($val_str) ? $val_str : '';
 		if ($this->has_wrap){
@@ -52,6 +52,7 @@ class rm_tag_group{
  		}
 		
 		if ($this->tag_name_attr){// allows for a default name to be set, when required
+			$this->global_attrs[]='name';
 			if (isset($def['name']) &&  is_string($def['name'])){ 
 				$this->tag_name_attr = $def['name']; 
 			}elseif( isset($def['att']['name'])){
@@ -60,11 +61,16 @@ class rm_tag_group{
 			$def['att']['name'] = $this->tag_name_attr; 
 		} 
 		if ($this->tag_type_attr){
-			$def['att']['type'] = $this->tag_type_attr; 
+			$this->tag_attrs.=' type = "'.$this->tag_type_attr.'" '; // adds type attr; but  prevents it from being user accesible
 		} 
 		if (is_array($def['att'])){ 
- 			foreach ($this->attr_list as $attr){
-				$this->tag_attrs.=' '.$attr.' = "'.$def['att'][$attr].'" ';
+ 			foreach ($this->attr_list + $this->global_attrs as $attr){
+				if(isset($def['att'][$attr])) { $this->tag_attrs.=' '.$attr.' = "'.$def['att'][$attr].'" ';}
+			}
+		}
+		if (is_array($def['datt'])){ 
+ 			foreach ($def['datt'] as $key=>$val){
+				if(isset($def['att'][$attr])) { $this->tag_attrs.=' data-'.$key.' = "'.$val.'" ';}
 			}
 		}
   		$this->value_str($def['eq'],$def['qt']);
@@ -87,7 +93,8 @@ class rm_tag_group{
 	function value_str($eq = " = ", $qt='"'){
  		$this->value_qt = $qt ? '"'  : "'";
 		$this->value_eq = $eq;
- 		$this->value_str = ' value'.$this->value_eq.$this->value_qt.$this->value_tag.$this->value_qt;
+ 		$this->value_frag = ' value'.$this->value_eq.$this->value_qt;
+ 		$this->value_str = $this->value_frag.$this->value_tag.$this->value_qt;
    	}
 	
 	protected function generate_group($data){//
@@ -149,11 +156,10 @@ class rm_tag_group{
 			 	}
  		 	}
 	 		$fooBypas = (isset($args['omitf']) && is_string($args['omitf']) && function_exists($args['omitf'])) ? $args['omitf'] : false;
- 		 	$search_root_l 	= $byVal ? $this->value_str : '>';
- 		 	$search_root_r 	= $byVal ? $this->value_qt : '</'.$this->tag.'>' ;
-   		 	
- 		 	$new_group =$this->the_group;
-	 		foreach ($actions as $action=>$targets){
+ 		 	$search_root_l 	= $byVal ? $this->value_frag : ($this->close_tag  ?  '>'  : '');
+ 		 	$search_root_r 	= $byVal ? $this->value_qt : ($this->close_tag  ? '</'.$this->tag.'>' : '');
+   		 	 var_dump ($search_root_l . $search_root_r);
+ 	 		foreach ($actions as $action=>$targets){
  				$do_lim =  ($action && (isset($args[$action.'lim']) && @($args[$action.'lim']+0) > 0))  ?
  						    $args[$action.'lim']+0 : false ; //setlim
  				$act=$acts[$action];
@@ -170,7 +176,7 @@ class rm_tag_group{
 						 	else{
 						 		$target = preg_quote($target); 					// escape string and add to regex
 						 		/////!!!!!
-						 		$rgx  	=  $byVal ? '/^.*<'.$this->tag.' .* value'.$this->value_eq.$this->value_qt.$target.$this->value_qt.'.*>.*$/m'  : '/^.*<.*>'.$target.'<.*>.*$/m' ; 					// select regex shell    
+						 		$rgx  	=  $byVal ? '/^.*<'.$this->tag.' .* '.$this->value_frag.$target.$this->value_qt.'.*>.*$/m'  : '/^.*<.*>'.$target.'<.*>.*$/m' ; 					// select regex shell    
 						 		$new_group = preg_replace($rgx, '', $new_group);// do pregmatch text replace 
 						 		continue; 
 						 	}
@@ -185,7 +191,7 @@ class rm_tag_group{
 							$do_lim =  $do_lim - $sub;  
  						}
 				 		$replace_with = $byVal  ?  $replace_this.$act : $act.$replace_this;
-    				 		$new_group = str_replace($replace_this, $replace_with, $new_group ,$use_lim);
+     				 		$new_group = str_replace($replace_this, $replace_with, $new_group ,$use_lim);
  						if ($do_lim !== false &&  $do_lim  <= 0 ){    break;}// replac ct limit	
 			 		}
 			 	}	 		 
@@ -212,6 +218,26 @@ class rm_tag_group{
 	protected $has_text		= true;
 }
 
+ class rm_fg_radiobutton extends rm_tag_group{
+	
+	protected $selected 	= ' CHECKED ';	
+	protected $tag 	 		= 'input';	
+	protected $onlyByVal	= false;
+	protected $tag_type_attr= 'radio' ;
+	protected $tag_name_attr= 'radio_set' ;
+	protected $close_tag 	=	false;
+	protected $has_wrap	= true;
+  }
+
+ class rm_fg_checkbox extends rm_tag_group{
+	
+	protected $selected 	= ' CHECKED ';	
+	protected $tag 	 		= 'input';	
+	protected $onlyByVal	= false;
+	protected $tag_type_attr= 'checkbox' ;
+	protected $close_tag 	=	false;
+	protected $has_wrap	= true;
+  }
 
 $opts=<<<EOT
 
@@ -247,6 +273,6 @@ $opts[]=array("a"=>"ten","b"=>"ten end","c"=>"test","d"=>"test7","e"=>"health");
 $opts[]=array("a"=>"eleven","b"=>"strange end","c"=>"test","d"=>"test11","e"=>"better");
 $opts[]=array("a"=>"twelve","b"=>"sure end","c"=>"test","d"=>"quiz","e"=>"best");
 
-$a= new rm_fg_select($opts,'{{a}}-{{c}}-{{##}}','text string #{{##}}', array('ski'=>array(1)));
+$a= new rm_fg_radiobutton($opts,'o-{{a}}','text string #{{##}}', array('bef'=>'<label for = "id-{{##}}">{{a}}</label>', 'ski'=>array(1),'att'=>array('id'=>"id-{{##}}")));
 
-echo '<select>'.$a->output(false, array('sel'=>array('text string #3','text string #5','text string #10'), 'dis'=>array('text string #4','text string #8','text string #9','text string #6'), 'dislim'=>2 , 'omit'=>array('ten-test-9','first-test-0')  )).'</select>';
+echo '<select>'.$a->output(true, array('sel'=>array('text string #5' ), 'dis'=>array('text string #4','text string #8','text string #9','text string #6'), 'dislim'=>2 , 'omit'=>array('ten-test-9','first-test-0')  ))."</select>";
