@@ -1,3 +1,6 @@
+<style>
+	input[disabled]+label{ color:#777;}
+</style>
 <?
 /**
  * Author: Ray Messina
@@ -36,7 +39,7 @@ class rm_tag_group{
 	protected $skip_index	 =  array();
 	protected $skip_val 	 =  array();
 	protected $attr_list 	 =  array();
-	protected $global_attrs	 = array( 'dir','lang','style','id','class','tabindex','accesskey','title', 'hidden', 'contenteditable', 'translate');
+	protected $global_attrs	 =  array( 'dir','lang','style','id','class','tabindex','accesskey','title' ,'onblur','onfocus', 'onmousemove', 'onmouseout', 'onmousedown', 'onmouseup', 'onmouseover', 'onclick','ondblclik');
 		
 	function __construct($data, $val_str='', $text_str='', array $args =array()){
 		$def = array('eq'=>$this->value_eq	 , 'qt'=>$this->value_qt, 'row'=>false, 'bef'=>'',  'aft'=>'', 'att'=>array(), 'datt'=>array());
@@ -157,18 +160,25 @@ class rm_tag_group{
 			 	}
  		 	}
 	 		$fooBypas = (isset($args['omitf']) && is_string($args['omitf']) && function_exists($args['omitf'])) ? $args['omitf'] : false;
- 		 	$search_root_l 	= $byVal ? $this->value_frag : ($this->close_tag  ?  '>'  : '');
- 		 	$search_root_r 	= $byVal ? $this->value_qt : ($this->close_tag  ? '</'.$this->tag.'>' : '');
+ 		 	$search_root_l 	= $byVal ? $this->value_frag :  '>'   ;
+ 		 	$search_root_r 	= $byVal ? $this->value_qt : ($this->close_tag  ? '</'.$this->tag.'>' : '<');
  		 	$new_group =$this->the_group;
  	 		foreach ($actions as $action=>$targets){
  				$do_lim =  ($action && (isset($args[$action.'lim']) && @($args[$action.'lim']+0) > 0))  ?
  						    $args[$action.'lim']+0 : false ; //setlim
  				$act=$acts[$action];
  		 		foreach ($targets as $key=>$target){
-
-					$replace_this= $search_root_l.$target.$search_root_r;  ///????
+ 		 			$rep_array = false;
+					if ( $act  && (!$this->close_tag && $this->has_wrap)){  // operates only on single tag elements  with wraps
+						$rep_array= $this->preg_rep($byVal, $target, $new_group, $act);
+						$replace_this= is_array($rep_array) ? $rep_array[0] : $rep_array;
+						 
+					}else{
+						$replace_this= $search_root_l.$target.$search_root_r ;
+					}
 					
-					echo "$replace_this\n";
+					   ///????
+					
 					if(!$act){//performs omit!!!!!!!! 
 						// fooBypass / else:
 						if ($fooBypas){
@@ -178,10 +188,7 @@ class rm_tag_group{
 						 	// if target is array then  fill in {{vars}}
 						 	if (is_array($target)){  $replace_this = $this->key_replace($target, $key); }
 						 	else{
-						 		$target = preg_quote($target); 					// escape string and add to regex
-						 		/////!!!!!
-						 		$rgx  	=  $byVal ? '/^.*<'.$this->tag.' .* '.$this->value_frag.$target.$this->value_qt.'.*>.*$/m'  : '/^.*<.*>'.$target.'<.*>.*$/m' ; 					// select regex shell    
-						 		$new_group = preg_replace($rgx, '', $new_group);// do pregmatch text replace 
+ 						 		$new_group = $this->preg_rep($byVal, $target, $new_group);// do pregmatch text replace 
 						 		continue; 
 						 	}
  					    }
@@ -190,20 +197,40 @@ class rm_tag_group{
 			 		}
  			 		else{// performs disables and selects
 				 		$use_lim = -1;
-						if ($do_lim > 0 ){
-							$sub = substr_count ($new_group, $replace_this);  // get a count of the number of intances of the str to be replaced
-  							$use_lim = ($sub > $do_lim) ? $do_lim :  $sub; // if the count is more than the remaining limit...
-							$do_lim =  $do_lim - $sub;  
- 						}
-				 		$replace_with = $byVal  ?  $replace_this.$act : $act.$replace_this;
-     				 		$new_group = str_replace($replace_this, $replace_with, $new_group ,$use_lim);
- 						if ($do_lim !== false &&  $do_lim  <= 0 ){    break;}// replac ct limit	
+				 		$array_flag = is_array($rep_array);
+				 		$replace_group = $array_flag ? $rep_array[0] : array($replace_this) ; // if a replament array has been set take the first (arrray to be relace index);
+				 		
+				 		foreach ($replace_group  as $index=> $replace_this ){
+							if ($do_lim > 0 ){
+								$sub = substr_count ($new_group, $replace_this);  // get a count of the number of intances of the str to be replaced
+	  							$use_lim = ($sub > $do_lim) ? $do_lim :  $sub; // if the count is more than the remaining limit...
+								$do_lim =  $do_lim - $sub;  
+	 						}
+					 		if (!$array_flag ) {$replace_with = $byVal  ?  $replace_this.$act : $act.$replace_this;}
+					 		else{ $replace_with = $rep_array[1][$index]; }
+	     				 	$new_group = str_replace($replace_this, $replace_with, $new_group ,$use_lim);
+	 						if ($do_lim !== false &&  $do_lim  <= 0 ){    break 2;}// replac ct limit	
+	 					}
 			 		}
 			 	}	 		 
   		 	}
  		 	return $new_group;
  		 	
  	}
+ 	
+ 	 	protected function preg_rep($byVal,  $needle,$haystack, $replacement = false){
+  	 		$needle = preg_quote($needle); 					// escape string and add to regex
+  	 		$rgx  	=  $byVal ? '/^.*<'.$this->tag.' .* '.$this->value_frag.$needle.$this->value_qt.'.*>.*$/m'  : '/^.*<.*>'.$needle.'<.*>.*$/m' ; 					// select regex shell  
+   	 		if (!$replacement) { return preg_replace($rgx, '', $haystack);} //returns  original with lines containing needle deleted
+  	 		preg_match_all($rgx, $haystack,$matches);
+  	 		$matches  = $matches  ? $matches[0] : array();
+  	 		$matches =  array_keys(array_flip($matches));
+  	 		foreach ($matches as $match){
+	  	 		$replacements[] = str_replace('<'.$this->tag.' ', '<'.$this->tag.' '.$replacement, $match);
+  	 		}
+  	 		return array($matches,$replacements); //returns an array of matches  of lines containing $needle
+  	}
+
  	
  }
  
@@ -212,7 +239,7 @@ class rm_tag_group{
 	protected $selected 	= ' SELECTED ';	
 	protected $tag 	 		= 'option';	
 	protected $close_tag	= false;
-	
+	protected $attr_list 	=  array('label');
 }
 
  class rm_fg_select extends rm_tag_group{
@@ -221,6 +248,7 @@ class rm_tag_group{
 	protected $tag 	 		= 'option';	
 	protected $onlyByVal	= false;
 	protected $has_text		= true;
+	protected $attr_list 	=  array('label');
 }
 
  class rm_fg_radiobutton extends rm_tag_group{
@@ -232,6 +260,7 @@ class rm_tag_group{
 	protected $tag_name_attr= 'radio_set' ;
 	protected $close_tag 	=	false;
 	protected $has_wrap	= true;
+	
   }
 
  class rm_fg_checkbox extends rm_tag_group{
@@ -278,9 +307,9 @@ $opts[]=array("a"=>"ten","b"=>"ten end","c"=>"test","d"=>"test7","e"=>"health");
 $opts[]=array("a"=>"eleven","b"=>"strange end","c"=>"test","d"=>"test11","e"=>"better");
 $opts[]=array("a"=>"twelve","b"=>"sure end","c"=>"test","d"=>"quiz","e"=>"best");
 
-$a= new rm_fg_radiobutton($opts,'o-{{a}}','text string #{{##}}', array('bef'=>'<label for = "id-{{##}}">{{a}}</label>', 'ski'=>array(1),'att'=>array('id'=>"id-{{##}}")));
+$a= new rm_fg_select ($opts,'o-{{a}}','text string #{{##}}', array('aft'=>' <label for = "id-{{##}}">{{a}}</label> ', 'ski'=>array(1),'att'=>array('id'=>"id-{{##}}")));
 
-echo  $a->output(false, array('sel'=>array('o-fifth' ), 'dis'=>array('o-sixth','text string #8','text string #9','text string #6'), 'dislim'=>2 , 'omit'=>array('eight','first-test-0')  ));
+echo  '<select>'.$a->output(true, array('sel'=>array('o-fifth','fifth', 'o-sixth','o-ten'), 'dis'=>array('o-twelve','nine','text string #9','text string #6'), 'sellim'=>3 , 'omit'=>array('eight','o-eight')  )).'</select>';
 
 
-//has bug: INPUT tag fails to SELECT/DISABLE when in byValue = false;
+//fixed: INPUT tag fails to SELECT/DISABLE when in byValue = false;
