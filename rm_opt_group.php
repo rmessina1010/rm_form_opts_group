@@ -150,6 +150,7 @@ class rm_tag_group{
 	 		$byVal = $this->onlyByVal ? true : $byVal;
 	 		$actions =array('omit'=>array(),  'sel'=>array(),'dis'=>array());
 	 		$acts 	=array('omitt'=>false, 'sel'=>$this->selected,'dis'=>' DISABLED ');
+	 		
 	 		foreach ($actions as $setup=>$junk){
 		 		 if (isset($args[$setup])){ 
 			 		 $actions[$setup] = is_array($args[$setup]) ? $args[$setup] : array($args[$setup]); 
@@ -158,14 +159,17 @@ class rm_tag_group{
 	 		$fooBypas = (isset($args['omitf']) && is_string($args['omitf']) && function_exists($args['omitf'])) ? $args['omitf'] : false;
  		 	$search_root_l 	= $byVal ? $this->value_frag : ($this->close_tag  ?  '>'  : '');
  		 	$search_root_r 	= $byVal ? $this->value_qt : ($this->close_tag  ? '</'.$this->tag.'>' : '');
-   		 	 var_dump ($search_root_l . $search_root_r);
+ 		 	$new_group =$this->the_group;
  	 		foreach ($actions as $action=>$targets){
  				$do_lim =  ($action && (isset($args[$action.'lim']) && @($args[$action.'lim']+0) > 0))  ?
  						    $args[$action.'lim']+0 : false ; //setlim
  				$act=$acts[$action];
  		 		foreach ($targets as $key=>$target){
+
 					$replace_this= $search_root_l.$target.$search_root_r;  ///????
-					if(!$act){//performs omit!!!!!!!!
+					
+					echo "$replace_this\n";
+					if(!$act){//performs omit!!!!!!!! 
 						// fooBypass / else:
 						if ($fooBypas){
 							$replace_this = $fooBypas($target,$byVal,$this->tag, $this->value_str,$this->tag_text, $rgxShell,$replace_this);
@@ -181,6 +185,7 @@ class rm_tag_group{
 						 		continue; 
 						 	}
  					    }
+
  					    $new_group = str_replace($replace_this, '', $new_group); 		//do text replace
 			 		}
  			 		else{// performs disables and selects
@@ -275,4 +280,7 @@ $opts[]=array("a"=>"twelve","b"=>"sure end","c"=>"test","d"=>"quiz","e"=>"best")
 
 $a= new rm_fg_radiobutton($opts,'o-{{a}}','text string #{{##}}', array('bef'=>'<label for = "id-{{##}}">{{a}}</label>', 'ski'=>array(1),'att'=>array('id'=>"id-{{##}}")));
 
-echo '<select>'.$a->output(true, array('sel'=>array('text string #5' ), 'dis'=>array('text string #4','text string #8','text string #9','text string #6'), 'dislim'=>2 , 'omit'=>array('ten-test-9','first-test-0')  ))."</select>";
+echo  $a->output(false, array('sel'=>array('o-fifth' ), 'dis'=>array('o-sixth','text string #8','text string #9','text string #6'), 'dislim'=>2 , 'omit'=>array('eight','first-test-0')  ));
+
+
+//has bug: INPUT tag fails to SELECT/DISABLE when in byValue = false;
