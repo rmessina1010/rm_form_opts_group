@@ -1,8 +1,6 @@
-<style>
-	input[disabled]+label{ color:#777;}
-</style>
-<?
+ <?
 /**
+ * Script: form_opt_group
  * Author: Ray Messina
  * Copyright: 2020 Ray Messina Design;
  * GNU General Public License
@@ -20,7 +18,7 @@ class rm_tag_group{
 	protected $tag_type_attr =  '' ;	
 	protected $tag_name_attr =  '' ;	
 	protected $tag_attrs 	 =  '' ;
-	protected $tag_txt	 	 =  '' ;
+	protected $tag_text	 	 =  '' ;
 	protected $close_tag 	 =	true;	
   	protected $value_tag 	 =	'';
 	protected $tag_row		 =	'';
@@ -40,6 +38,8 @@ class rm_tag_group{
 	protected $skip_val 	 =  array();
 	protected $attr_list 	 =  array();
 	protected $global_attrs	 =  array( 'dir','lang','style','id','class','tabindex','accesskey','title' ,'onblur','onfocus', 'onmousemove', 'onmouseout', 'onmousedown', 'onmouseup', 'onmouseover', 'onclick','ondblclik');
+	
+	protected $actions = array('omit'=>array(),  'sel'=>array(),'dis'=>array());
 		
 	function __construct($data, $val_str='', $text_str='', array $args =array()){
 		$def = array('eq'=>$this->value_eq	 , 'qt'=>$this->value_qt, 'row'=>false, 'bef'=>'',  'aft'=>'', 'att'=>array(), 'datt'=>array());
@@ -51,7 +51,7 @@ class rm_tag_group{
 			if (is_string($def['aft'])){ $this->aft = $def['aft'];}
 		}
 		if ($this->has_text){
-			if (is_string($text_str)){ $this->tag_text = $text_str;}
+			if (is_scalar($text_str)){ $this->tag_text = $text_str;}
  		}
 		
 		if ($this->tag_name_attr){// allows for a default name to be set, when required
@@ -151,8 +151,8 @@ class rm_tag_group{
   	function output($byVal=true , array $args=array()){
 	 		
 	 		$byVal = $this->onlyByVal ? true : $byVal;
-	 		$actions =array('omit'=>array(),  'sel'=>array(),'dis'=>array());
-	 		$acts 	=array('omitt'=>false, 'sel'=>$this->selected,'dis'=>' DISABLED ');
+	 		$actions = $this->actions;
+	 		$acts 	=array('omit'=>false,  'sel'=>$this->selected,'dis'=>' DISABLED ');
 	 		
 	 		foreach ($actions as $setup=>$junk){
 		 		 if (isset($args[$setup])){ 
@@ -186,7 +186,7 @@ class rm_tag_group{
 							$replace_this = is_string($replace_this) ? $replace_this : '';  // sanitizes bypass foo results
 						}else{
 						 	// if target is array then  fill in {{vars}}
-						 	if (is_array($target)){  $replace_this = $this->key_replace($target, $key); }
+						 	if (is_array($target)){  $replace_this = $this->key_replace($target, $key);}
 						 	else{
  						 		$new_group = $this->preg_rep($byVal, $target, $new_group);// do pregmatch text replace 
 						 		continue; 
@@ -220,11 +220,13 @@ class rm_tag_group{
  	
  	 	protected function preg_rep($byVal,  $needle,$haystack, $replacement = false){
   	 		$needle = preg_quote($needle); 					// escape string and add to regex
-  	 		$rgx  	=  $byVal ? '/^.*<'.$this->tag.' .* '.$this->value_frag.$needle.$this->value_qt.'.*>.*$/m'  : '/^.*<.*>'.$needle.'<.*>.*$/m' ; 					// select regex shell  
+  	 		$rgx  	=  $byVal ? '/^.*<'.$this->tag.' .*'.trim($this->value_frag.$needle.$this->value_qt).'.*>.*$/m'  : '/^.*<.*>'.$needle.'<.*>.*$/m' ; 					// select regex shell  
+  	 		
    	 		if (!$replacement) { return preg_replace($rgx, '', $haystack);} //returns  original with lines containing needle deleted
   	 		preg_match_all($rgx, $haystack,$matches);
   	 		$matches  = $matches  ? $matches[0] : array();
   	 		$matches =  array_keys(array_flip($matches));
+  	 		$replacements=array();
   	 		foreach ($matches as $match){
 	  	 		$replacements[] = str_replace('<'.$this->tag.' ', '<'.$this->tag.' '.$replacement, $match);
   	 		}
@@ -236,10 +238,11 @@ class rm_tag_group{
  
  class rm_fg_datalist extends rm_tag_group{
 	
-	protected $selected 	= ' SELECTED ';	
+	protected $selected 	= ' SELECTED ';	//vestigial
 	protected $tag 	 		= 'option';	
 	protected $close_tag	= false;
 	protected $attr_list 	=  array('label');
+	protected $actions = array('omit'=>array(), 'dis'=>array());
 }
 
  class rm_fg_select extends rm_tag_group{
@@ -272,44 +275,3 @@ class rm_tag_group{
 	protected $close_tag 	=	false;
 	protected $has_wrap	= true;
   }
-
-$opts=<<<EOT
-
-	<option value = "o-1">am option 1</option>
-	<option value = "o-2">am option 2</option>
-	<option value = "o-3">am option 3</option>
-	<option value = "o-4">am option 4</option>
-	<option value = "o-5">am option 5</option>
-	<option value = "o-6">am option 6</option>
-	<option value = "o-7">am option 7</option>
-	<option value = "o-8">am option 8</option>
-	<option value = "o-9">am option 9</option>
-	<option value = "o-10">am option 10</option>
-	<option value = "o-11">am option 11</option>
-	<option value = "o-12">am option 12</option>
-	<option value = "o-13">am option 13</option>
-	<option value = "o-14">am option 14</option>
-	<option value = "o-15">am option 15</option>
-
-EOT;
-
-$opts=array();
-$opts[]=array("a"=>"first","b"=>"start","c"=>"test","d"=>"run","e"=>"luck");
-$opts[]=array("a"=>"second","b"=>"continue","c"=>"test","d"=>"operate","e"=>"love");
-$opts[]=array("a"=>"third","b"=>"waste","c"=>"test","d"=>"engage","e"=>"success");
-$opts[]=array("a"=>"fourth","b"=>"end","c"=>"test","d"=>"deploy","e"=>"exit");
-$opts[]=array("a"=>"fifth","b"=>"new end","c"=>"test","d"=>"test","e"=>"win");
-$opts[]=array("a"=>"sixth","b"=>"newer end","c"=>"test","d"=>"test2","e"=>"winner");
-$opts[]=array("a"=>"seven","b"=>"end end","c"=>"test","d"=>"test7","e"=>"health");
-$opts[]=array("a"=>"eight","b"=>"end under  end","c"=>"test","d"=>"test7","e"=>"health");
-$opts[]=array("a"=>"nine","b"=>"end over end","c"=>"test","d"=>"test7","e"=>"health");
-$opts[]=array("a"=>"ten","b"=>"ten end","c"=>"test","d"=>"test7","e"=>"health");
-$opts[]=array("a"=>"eleven","b"=>"strange end","c"=>"test","d"=>"test11","e"=>"better");
-$opts[]=array("a"=>"twelve","b"=>"sure end","c"=>"test","d"=>"quiz","e"=>"best");
-
-$a= new rm_fg_select ($opts,'o-{{a}}','text string #{{##}}', array('aft'=>' <label for = "id-{{##}}">{{a}}</label> ', 'ski'=>array(1),'att'=>array('id'=>"id-{{##}}")));
-
-echo  '<select>'.$a->output(true, array('sel'=>array('o-fifth','fifth', 'o-sixth','o-ten'), 'dis'=>array('o-twelve','nine','text string #9','text string #6'), 'sellim'=>3 , 'omit'=>array('eight','o-eight')  )).'</select>';
-
-
-//fixed: INPUT tag fails to SELECT/DISABLE when in byValue = false;
