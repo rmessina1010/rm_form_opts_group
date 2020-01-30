@@ -189,9 +189,9 @@ $opts_array[]=array("a"=>"twelve","b"=>"sure end","c"=>"test","d"=>"quiz","e"=>"
 ?></div>
 
 
-<? $sample= new rm_fg_radiobutton ($opts_string_rd,'o-{{a}}','text string #{{##}}', array('name'=>'healtradio','aft'=>' <label for = "id-{{##}}">{{a}}</label> ', 'ski'=>array(1),'att'=>array('id'=>"id-{{##}}"))); ?>
+<? $sample= new rm_fg_radiobutton ($opts_string_rd,'o-{{a}}','text string #{{##}}', array('name'=>'rad_set','aft'=>' <label for = "id-{{##}}">{{a}}</label> ', 'ski'=>array(1),'att'=>array('id'=>"id-{{##}}"))); ?>
 <p>String/By Value</p>
-<div><? echo $sample->output(true, array('sel'=>array('o-fifth', 'o-seven','o-ten'), 'dis'=>array('o-nine'), 'sellim'=>3, 'omit'=>array('o-sixth','o-eight')     ))  ;
+<div><? echo $sample->output(true, array('name'=>'healthradio', 'sel'=>array('o-fifth', 'o-seven','o-ten'), 'dis'=>array('o-nine'), 'sellim'=>3, 'omit'=>array('o-sixth','o-eight')     ))  ;
 ?></div>
 <p>String/By Text</p>
 <div><? echo $sample->output(false, array('name'=>'wealthradio','sel'=>array('fourth', 'seven','ten'), 'dis'=>array('nine'), 'sellim'=>2, 'omit'=>array('sixth','eight')     ))  ;

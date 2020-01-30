@@ -17,6 +17,7 @@ class rm_tag_group{
   	protected $tag 	 		 =  false ;	
 	protected $tag_type_attr =  '' ;	
 	protected $tag_name_attr =  '' ;	
+	protected $shared_name	 =  false ;	
 	protected $tag_attrs 	 =  '' ;
 	protected $tag_text	 	 =  '' ;
 	protected $close_tag 	 =	true;	
@@ -150,6 +151,7 @@ class rm_tag_group{
 
   	function output($byVal=true , array $args=array()){
 	 		
+	 		
 	 		$byVal = $this->onlyByVal ? true : $byVal;
 	 		$actions = $this->actions;
 	 		$acts 	=array('omit'=>false,  'sel'=>$this->selected,'dis'=>' DISABLED ');
@@ -214,6 +216,11 @@ class rm_tag_group{
 			 		}
 			 	}	 		 
   		 	}
+  		 	
+  		 	if ($this->shared_name && isset($args['name'])){
+	  		 	$new_group =preg_replace('/<'.$this->tag.'( .*)'.$this->tag_name_attr.'/m', '<'.$this->tag."$1".$args['name']  , $new_group);
+  		 	}
+
  		 	return $new_group;
  		 	
  	}
@@ -261,8 +268,9 @@ class rm_tag_group{
 	protected $onlyByVal	= false;
 	protected $tag_type_attr= 'radio' ;
 	protected $tag_name_attr= 'radio_set' ;
-	protected $close_tag 	=	false;
-	protected $has_wrap	= true;
+	protected $close_tag 	= false;
+	protected $has_wrap		= true;
+	protected $shared_name	= true ;	
 	
   }
 
