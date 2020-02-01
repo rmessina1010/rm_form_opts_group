@@ -220,7 +220,12 @@ class rm_tag_group{
   		 	if ($this->shared_name && isset($args['name'])){
 	  		 	$new_group =preg_replace('/<'.$this->tag.'( .*)'.$this->tag_name_attr.'/m', '<'.$this->tag."$1".$args['name']  , $new_group);
   		 	}
-
+  		 	
+  		 	$n_bef = isset($args['_name']) ?  trim($args['_name']):'';
+  		 	$n_aft = isset($args['name_']) ?  trim($args['name_']):'';
+  		 	if ($n_bef || $n_aft){
+	  		 	$new_group =preg_replace('#<'.$this->tag.'(\s[^>]*name\s*=\s*[\'"])([^\'"]+)#m','<'.$this->tag."$1".$n_bef."$2".$n_aft,$new_group);
+  		 	}
  		 	return $new_group;
  		 	
  	}

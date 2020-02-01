@@ -194,5 +194,5 @@ $opts_array[]=array("a"=>"twelve","b"=>"sure end","c"=>"test","d"=>"quiz","e"=>"
 <div><? echo $sample->output(true, array('name'=>'healthradio', 'sel'=>array('o-fifth', 'o-seven','o-ten'), 'dis'=>array('o-nine'), 'sellim'=>3, 'omit'=>array('o-sixth','o-eight')     ))  ;
 ?></div>
 <p>String/By Text</p>
-<div><? echo $sample->output(false, array('name'=>'wealthradio','sel'=>array('fourth', 'seven','ten'), 'dis'=>array('nine'), 'sellim'=>2, 'omit'=>array('sixth','eight')     ))  ;
+<div><? echo $sample->output(false, array('name_'=>'aftOOO','sel'=>array('fourth', 'seven','ten'), 'dis'=>array('nine'), 'sellim'=>2, 'omit'=>array('sixth','eight')     ))  ;
 ?></div>
