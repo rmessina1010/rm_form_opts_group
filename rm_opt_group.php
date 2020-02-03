@@ -94,7 +94,7 @@ class rm_tag_group{
    		$this->generate_group($data);
 	}
 	
-	function value_str($eq = " = ", $qt='"'){
+	protected function value_str($eq = " = ", $qt='"'){
  		$this->value_qt = $qt ? '"'  : "'";
 		$this->value_eq = $eq;
  		$this->value_frag = ' value'.$this->value_eq.$this->value_qt;
@@ -115,7 +115,7 @@ class rm_tag_group{
 		return;
 	}
 
-	function skip_build($row,$index){
+	protected function skip_build($row,$index){
  		if (isset($this->skip_index[$index])){return true;}
  		foreach ($this->skip_val as $col=>$skip_vals){
 	 		if (isset($skip_vals[$row[$col]])) {return true;}
@@ -126,7 +126,7 @@ class rm_tag_group{
 	 	return false;	
 	}
 
- 	function gather_rep_keys(){
+ 	protected function gather_rep_keys(){
 		$str = $this->value_tag;
 		if ($this->has_wrap ){ $str.=$this->bef.$this->aft; }
 		$str .= $this->tag_attrs;
@@ -134,14 +134,14 @@ class rm_tag_group{
 		$this->rep_keys =isset($m[1]) ? $m[1] : array();
 	}
  	
-	function build_element(){
+	protected function build_element(){
 		$this->tag_row='<'.$this->tag.' '.$this->tag_attrs.$this->value_str.' >'.$this->tag_text;
  		if( $this->close_tag){$this->tag_row.='</'.$this->tag.'>';}
 		if ($this->has_wrap) {$this->tag_row= $this->bef.$this->tag_row.$this->aft;}
   		$this->tag_row.="\n";
 	}
 	
-	function key_replace($data,$key){
+	protected function key_replace($data,$key){
 		$str= str_replace('{{##}}', $key, $this->tag_row);
 		foreach ($this->rep_keys as $col){
 			$str= str_replace('{{'.$col.'}}', $data[$col], $str); 
