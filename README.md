@@ -12,9 +12,9 @@ Construct Method:(
 		   //optional//
            $text_str= a sting pattern for text (applies to tags with text content only)
            $args: An argument array(
-	           'eq'=> 	 ,
-	           'qt'=>  ,
-	           'row'=>  , 
+	           'eq'=>  equals string;  allows for contr of spacing ; default is ' = ' ,
+	           'qt'=>  quote mark charcter truthy: uses double qoutes (") , While falsy uses single quotes (')
+	           'row'=>  for use with String data input this deines a pattern for a single row of elements, 
 	           'bef'=> string pattern defining text before the tag, such as a LABEL; 
 	                   will be considered when byVal is set to false. ,  
 	           'aft'=>string  pattern defining text after the tag, such as a LABEL;
@@ -40,8 +40,8 @@ Output Method:(
 	           'omitlim'=> integer to use as a MAXIMUM number of OMITTED elements, 
 	           'sellim'=>integer to use as a MAXIMUM number of SELECTED/CHECKED elements,
 	           'dislim'=>integer to use as a MAXIMUM number of DISABLED elements,
-	           'name' =>
-	           '_name' =>
-	           'name_' =>
+	           'name' => overrides name attribute; this function is invoked  AFTER placeholders are replaced,
+	           '_name' => prepends the string to the name attribute; this function is invoked  AFTER 'Name',
+	           'name_' => appends the string to the name attribute; this function is invoked  AFTER 'Name'
 	       )
 )
